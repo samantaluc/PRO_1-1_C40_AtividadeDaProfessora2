@@ -1,41 +1,53 @@
 class Game {
   constructor() {
-    this.resetTitle = createElement("h2");
-    this.resetButton = createButton("");
-    this.leadeboardTitle = createElement("h2");
-    this.leader1 = createElement("h2");
-    this.leader2 = createElement("h2");
+    // Configuração de elementos HTML para reiniciar o jogo e exibir o placar
+    this.resetTitle = createElement("h2"); // Título de reinício
+    this.resetButton = createButton(""); // Botão de reinício
+    this.leadeboardTitle = createElement("h2"); // Título do placar
+    this.leader1 = createElement("h2"); // Primeiro jogador no placar
+    this.leader2 = createElement("h2"); // Segundo jogador no placar
   }
 
+  // Método para obter o estado do jogo do banco de dados
   getState() {
     var gameStateRef = database.ref("gameState");
     gameStateRef.on("value", function(data) {
       gameState = data.val();
     });
   }
+
+  // Método para atualizar o estado do jogo no banco de dados
   update(state) {
     database.ref("/").update({
       gameState: state
     });
   }
 
+  // Método para iniciar o jogo
   start() {
-    player = new Player();
-    playerCount = player.getCount();
-    form = new Form();
-    form.display();
+    // Inicialização de objetos do jogo, como carros, combustível, moedas, obstáculos, etc.
+    player = new Player(); // Instância do jogador
+    playerCount = player.getCount(); // Obter o número total de jogadores
+    form = new Form(); // Instância do formulário de entrada de jogador
+    form.display(); // Exibir o formulário
+
+    // Inicialização dos carros dos jogadores
     car1 = createSprite(width / 2 - 50, height - 100);
     car1.addImage("car1", car1_img);
     car1.scale = 0.07;
+
     car2 = createSprite(width / 2 + 100, height - 100);
     car2.addImage("car2", car2_img);
     car2.scale = 0.07;
-    cars = [car1, car2];
-    fuels = new Group();
-    powerCoins = new Group();
 
-    obstacles = new Group();
+    cars = [car1, car2]; // Array de carros
+
+    fuels = new Group(); // Grupo de sprites de combustível
+    powerCoins = new Group(); // Grupo de sprites de moedas de poder
+    obstacles = new Group(); // Grupo de sprites de obstáculos
+
     var obstaclesPositions = [
+      // Posições iniciais dos obstáculos   
       { x: width / 2 + 250, y: height - 800, image: obstacle2Image },
       { x: width / 2 - 150, y: height - 1300, image: obstacle1Image },
       { x: width / 2 + 250, y: height - 1800, image: obstacle1Image },
@@ -51,24 +63,36 @@ class Game {
     ];
     // Adicionar sprite de combustível no jogo
     this.addSprites(fuels, 4, fuelImage, 0.02);
+
     // Adicionar sprite de moeda no jogo
     this.addSprites(powerCoins, 18, powerCoinImage, 0.09);
-    //Adicionar sprite de obstáculo no jogo
-    this.addSprites
-    (obstacles,      obstaclesPositions.length,      obstacle1Image,      0.04,      obstaclesPositions);
+
+    // Adicionar sprite de obstáculo no jogo
+    this.addSprites(
+      obstacles,
+      obstaclesPositions.length,
+      obstacle1Image,
+      0.04,
+      obstaclesPositions
+    );
   }
+
+  // Método para adicionar sprites a um grupo
   addSprites(spriteGroup, numberOfSprites, spriteImage, scale, positions = []) {
     for (var i = 0; i < numberOfSprites; i++) {
       var x, y;
-      //C41 //SA
+
       if (positions.length > 0) {
+        // Usar posições predefinidas se fornecidas
         x = positions[i].x;
         y = positions[i].y;
         spriteImage = positions[i].image;
       } else {
+        // Caso contrário, gerar posições aleatórias
         x = random(width / 2 + 150, width / 2 - 150);
         y = random(-height * 4.5, height - 400);
       }
+
       var sprite = createSprite(x, y);
       sprite.addImage("sprite", spriteImage);
 
@@ -77,12 +101,12 @@ class Game {
     }
   }
 
+  // Método para lidar com elementos HTML do jogo
   handleElements() {
-    form.hide();
-    form.titleImg.position(40, 50);
-    form.titleImg.class("gameTitleAfterEffect");
+    form.hide(); // Esconder o formulário de entrada de jogador
+    form.titleImg.position(40, 50); // Configurar posição do título do jogo
 
-    //C39
+    // Configurar título de reinício e botão de reinício
     this.resetTitle.html("Reiniciar o Jogo");
     this.resetTitle.class("resetText");
     this.resetTitle.position(width / 2 + 200, 40);
@@ -90,10 +114,12 @@ class Game {
     this.resetButton.class("resetButton");
     this.resetButton.position(width / 2 + 230, 100);
 
+    // Configurar título do placar
     this.leadeboardTitle.html("Placar");
     this.leadeboardTitle.class("resetText");
     this.leadeboardTitle.position(width / 3 - 60, 40);
 
+    // Configurar líderes no placar
     this.leader1.class("leadersText");
     this.leader1.position(width / 3 - 50, 80);
 
@@ -101,27 +127,26 @@ class Game {
     this.leader2.position(width / 3 - 50, 130);
   }
 
+  // Método principal de jogo
   play() {
-    this.handleElements();
-    this.handleResetButton();
+    this.handleElements(); // Lidar com elementos HTML
+    this.handleResetButton(); // Lidar com o botão de reinício
 
-    Player.getPlayersInfo();
+    Player.getPlayersInfo(); // Obter informações dos jogadores
 
     if (allPlayers !== undefined) {
-      image(track, 0, -height * 5, width, height * 6);
+      image(track, 0, -height * 5, width, height * 6); // Exibir pista de corrida
 
-      this.showLeaderboard();
+      this.showLeaderboard(); // Exibir placar
 
-      //índice da matriz
-      var index = 0;
+      var index = 0; // Índice da matriz de carros
       for (var plr in allPlayers) {
-        //adicione 1 ao índice para cada loop
-        index = index + 1;
+        index = index + 1; // Incrementar índice
 
-        //use os dados do banco de dados para exibir os carros nas direções x e y
         var x = allPlayers[plr].positionX;
         var y = height - allPlayers[plr].positionY;
 
+        // Atualizar a posição dos carros dos jogadores
         cars[index - 1].position.x = x;
         cars[index - 1].position.y = y;
 
@@ -130,23 +155,23 @@ class Game {
           fill("red");
           ellipse(x, y, 60, 60);
 
-          this.handleFuel(index);
-          this.handlePowerCoins(index);
+          this.handleFuel(index); // Lidar com coleta de combustível
+          this.handlePowerCoins(index); // Lidar com coleta de moedas de poder
 
-          //alterar a posição da câmera na direção y
-          camera.position.y = cars[index - 1].position.y;
+          camera.position.y = cars[index - 1].position.y; // Atualizar posição da câmera na direção y
         }
       }
 
-      //manipulando eventos de teclado
-      this.handlePlayerControls();
+      this.handlePlayerControls(); // Lidar com eventos de teclado
 
-      drawSprites();
+      drawSprites(); // Desenhar sprites na tela
     }
   }
 
+  // Método para lidar com o botão de reinício
   handleResetButton() {
     this.resetButton.mousePressed(() => {
+      // Redefinir o banco de dados e recarregar a página
       database.ref("/").set({
         playerCount: 0,
         gameState: 0,
@@ -156,14 +181,16 @@ class Game {
     });
   }
 
+  // Método para exibir o placar do jogo
   showLeaderboard() {
     var leader1, leader2;
     var players = Object.values(allPlayers);
+
+    // Verificar a classificação dos jogadores e exibir no placar
     if (
       (players[0].rank === 0 && players[1].rank === 0) ||
       players[0].rank === 1
     ) {
-      // &emsp;    Essa etiqueta é usada para exibir quatro espaços.
       leader1 =
         players[0].rank +
         "&emsp;" +
@@ -195,11 +222,14 @@ class Game {
         players[0].score;
     }
 
+    // Exibir os líderes no placar
     this.leader1.html(leader1);
     this.leader2.html(leader2);
   }
 
+  // Método para lidar com controles de jogador
   handlePlayerControls() {
+    // Verificar as teclas pressionadas e atualizar a posição do jogador
     if (keyIsDown(UP_ARROW)) {
       player.positionY += 10;
       player.update();
@@ -216,23 +246,21 @@ class Game {
     }
   }
 
+  // Método para lidar com a coleta de combustível por um jogador
   handleFuel(index) {
-    //adicionando combustível
+    // Verificar se um carro coleta combustível e atualizar o nível de combustível do jogador
     cars[index - 1].overlap(fuels, function(collector, collected) {
       player.fuel = 185;
-      //o sprite é coletado no grupo de colecionáveis que desencadeou
-      //o evento
-      collected.remove();
+      collected.remove(); // Remover o sprite coletado
     });
   }
 
+  // Método para lidar com a coleta de moedas de poder por um jogador
   handlePowerCoins(index) {
     cars[index - 1].overlap(powerCoins, function(collector, collected) {
       player.score += 21;
-      player.update();
-      //o sprite é coletado no grupo de colecionáveis que desencadeou
-      //o evento
-      collected.remove();
+      player.update(); // Atualizar a pontuação do jogador
+      collected.remove(); // Remover o sprite coletado
     });
   }
 }
